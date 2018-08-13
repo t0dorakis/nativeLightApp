@@ -113,24 +113,25 @@ const actions = {
         axios.get(`http://${bridge}/api/${user}/lights`)
             .then(response => {
                 let arr = [];
-                const data = response.data
+                const data = response.data;
+                // push identification key a attribute to object in array
                 for(let key in data){
                     data[key]["key"] = key;
                     arr.push(data[key]);
                 }
-                console.dir(arr);
-                console.log(arr.length);
+                // console.dir(arr);
                 commit('setLights', arr)
             })
             .catch(e => {
                 console.error(e);
             })
     },
-    switchPower: ({commit, state, dispatch}, index) => {
+    switchPower: ({commit, state, dispatch}, k) => {
         const bridge = state.bridges[0].internalipaddress;
         const user  = state.credentials.username;
-        const url = `http://${bridge}/api/${user}/lights/${index + 1}/state`;
-        let power = state.lights[index].state.on;
+        const url = `http://${bridge}/api/${user}/lights/${k}/state`;
+        const singleLight = state.lights.filter(light =>  light.key === k);
+        let power = singleLight[0].state.on;
 
         if (power === true) {
             power = false;
@@ -142,9 +143,23 @@ const actions = {
         })
             .then(response => {
                 const data = response.data;
+                // console.dir(data);
+                dispatch('getLights');
+            })
+            .catch(e => {
+                console.error(e);
+            })
+    },
+    changeHueState: ({commit, state, dispatch}, object) => {
+        const bridge = state.bridges[0].internalipaddress;
+        const user  = state.credentials.username;
+        const url = `http://${bridge}/api/${user}/lights/${object.key}/state`;
+
+        axios.put(url, object.body)
+            .then(response => {
+                const data = response.data;
                 console.dir(data);
                 dispatch('getLights');
-                // commit('setLights', arr)
             })
             .catch(e => {
                 console.error(e);
